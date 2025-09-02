@@ -9,5 +9,5 @@ PySocks==1.7.1
 pytest~=8.3.5
 selenium~=4.33.0
 openpyxl==3.1.2
-allure-pytest~=2.14.2
+allure-pytest~=2.13.5
 urllib3~=2.4.0
