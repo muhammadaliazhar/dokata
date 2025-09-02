@@ -1,31 +1,34 @@
 import pytest
-import json
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+import tempfile
 import os
 
-def pytest_addoption(parser):
-    """Add command-line option for selecting environment."""
-    parser.addoption(
-        "--env",
-        action="store",
-        default="sandbox",
-        help="Environment to run tests against (e.g., sandbox, production)"
-    )
-
 @pytest.fixture(scope="session")
-def config(request):
-    """Load environment-specific configuration from config.json."""
-    env = request.config.getoption("--env")
-    config_file_path = os.path.join(os.path.dirname(__file__), "config", "config.json")
+def driver():
+    """Setup Chrome WebDriver for Jenkins (headless, unique profile)."""
+    chrome_options = Options()
+    chrome_options.add_argument("--headless=new")         # Headless mode for Jenkins
+    chrome_options.add_argument("--no-sandbox")           # Required in CI
+    chrome_options.add_argument("--disable-dev-shm-usage")# Prevent crashes
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--disable-extensions")
 
-    if not os.path.exists(config_file_path):
-        # Fallback for Jenkins (no config.json present)
-        print(f"[WARN] config.json not found at {config_file_path}, using default values for env '{env}'.")
-        return {"base_url": "http://localhost", "browser": "chrome"}
+    # ✅ Create unique temporary profile directory for each run
+    user_data_dir = tempfile.mkdtemp()
+    chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
 
-    with open(config_file_path, "r") as config_file:
-        config_data = json.load(config_file)
+    # Optional: start maximized
+    chrome_options.add_argument("--window-size=1920,1080")
 
-    if env not in config_data:
-        raise ValueError(f"Environment '{env}' not found in config.json!")
+    service = Service("/usr/bin/chromedriver")  # adjust path if needed
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    yield driver
+    driver.quit()
 
-    return config_data[env]
+    # cleanup temp profile
+    try:
+        os.rmdir(user_data_dir)
+    except Exception:
+        pass
