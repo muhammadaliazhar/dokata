@@ -6,6 +6,22 @@ from webdriver_manager.chrome import ChromeDriverManager
 import tempfile
 import os
 
+
+# ✅ Add support for --env option
+def pytest_addoption(parser):
+    parser.addoption(
+        "--env",
+        action="store",
+        default="dev",   # default environment if not provided
+        help="Environment to run tests against (e.g. dev, sandbox, prod)",
+    )
+
+@pytest.fixture(scope="session")
+def env(request):
+    """Fixture to access the environment passed via --env option."""
+    return request.config.getoption("--env")
+
+
 @pytest.fixture(scope="session")
 def driver():
     """Setup Chrome WebDriver for Jenkins (headless, unique profile)."""
