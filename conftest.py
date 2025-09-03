@@ -2,6 +2,7 @@ import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 import tempfile
 import os
 
@@ -22,7 +23,8 @@ def driver():
     # Optional: start maximized
     chrome_options.add_argument("--window-size=1920,1080")
 
-    service = Service("/usr/bin/chromedriver")  # adjust path if needed
+    # ✅ Use webdriver-manager to auto-install matching ChromeDriver
+    service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
     yield driver
     driver.quit()
